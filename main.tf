@@ -218,6 +218,7 @@ module "codebuild" {
   environment_variables       = var.environment_variables
   cache_bucket_suffix_enabled = var.codebuild_cache_bucket_suffix_enabled
   cache_type                  = var.cache_type
+  image_pull_credentials_type = var.image_pull_credentials_type
 
   context = module.this.context
 }

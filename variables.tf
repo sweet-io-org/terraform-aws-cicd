@@ -191,3 +191,9 @@ variable "website_bucket_acl" {
   default     = "public-read"
   description = "Canned ACL of the S3 bucket objects that get served as a website, can be private if using CloudFront with OAI"
 }
+
+variable "build_image_pull_credentials_type" {
+  type        = string
+  default     = "CODEBUILD"
+  description = "Type of credentials AWS CodeBuild uses to pull images in your build.Valid values: CODEBUILD, SERVICE_ROLE. When you use a cross-account or private registry image, you must use SERVICE_ROLE credentials."
+}
