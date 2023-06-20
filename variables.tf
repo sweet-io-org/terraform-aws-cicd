@@ -15,6 +15,11 @@ variable "github_oauth_token" {
   description = "GitHub Oauth Token"
 }
 
+variable "github_oauth_token_type" {
+  type        = string
+  default = "PLAINTEXT"
+}
+
 variable "github_webhooks_token" {
   type        = string
   default     = ""
