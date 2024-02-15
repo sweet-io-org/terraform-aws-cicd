@@ -203,22 +203,22 @@ data "aws_iam_policy_document" "codebuild" {
 }
 
 module "codebuild" {
-  source                      = "cloudposse/codebuild/aws"
-  version                     = "1.0.0"
-  build_image                 = var.build_image
-  build_compute_type          = var.build_compute_type
-  buildspec                   = var.buildspec
-  attributes                  = ["build"]
-  privileged_mode             = var.privileged_mode
-  aws_region                  = var.region != "" ? var.region : data.aws_region.default.name
-  aws_account_id              = var.aws_account_id != "" ? var.aws_account_id : data.aws_caller_identity.default.account_id
-  image_repo_name             = var.image_repo_name
-  image_tag                   = var.image_tag
-  github_token                = var.github_oauth_token
-  github_token_type           = var.github_oauth_token_type
-  environment_variables       = var.environment_variables
-  cache_bucket_suffix_enabled = var.codebuild_cache_bucket_suffix_enabled
-  cache_type                  = var.cache_type
+  source                            = "cloudposse/codebuild/aws"
+  version                           = "2.0.1"
+  build_image                       = var.build_image
+  build_compute_type                = var.build_compute_type
+  buildspec                         = var.buildspec
+  attributes                        = ["build"]
+  privileged_mode                   = var.privileged_mode
+  aws_region                        = var.region != "" ? var.region : data.aws_region.default.name
+  aws_account_id                    = var.aws_account_id != "" ? var.aws_account_id : data.aws_caller_identity.default.account_id
+  image_repo_name                   = var.image_repo_name
+  image_tag                         = var.image_tag
+  github_token                      = var.github_oauth_token
+  github_token_type                 = var.github_oauth_token_type
+  environment_variables             = var.environment_variables
+  cache_bucket_suffix_enabled       = var.codebuild_cache_bucket_suffix_enabled
+  cache_type                        = var.cache_type
   build_image_pull_credentials_type = var.build_image_pull_credentials_type
 
   context = module.this.context
@@ -371,9 +371,9 @@ module "github_webhook" {
   source  = "cloudposse/repository-webhooks/github"
   version = "0.13.0"
 
-  enabled              = local.webhook_enabled
+  enabled = local.webhook_enabled
   # github_organization  = var.repo_owner
-  github_repositories  = [var.repo_name]
+  github_repositories = [var.repo_name]
   # github_token         = var.github_webhooks_token
   webhook_url          = local.webhook_url
   webhook_secret       = local.webhook_secret
