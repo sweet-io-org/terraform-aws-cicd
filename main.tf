@@ -15,7 +15,7 @@ locals {
 }
 
 data "aws_codestarconnections_connection" "gitconnection" {
-  count = loval.gitconnection_count
+  count = local.gitconnection_count
   arn   = var.github_connection_arn
 }
 
