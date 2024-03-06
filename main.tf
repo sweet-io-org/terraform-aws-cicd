@@ -4,6 +4,12 @@ data "aws_caller_identity" "default" {
 data "aws_region" "default" {
 }
 
+data "aws_codestarconnections_connection" {
+  count = var.github_connection_arn != "" ? 1 : 0
+
+  arn = var.github_connection_arn
+}
+
 locals {
   enabled         = module.this.enabled
   webhook_enabled = local.enabled && var.webhook_enabled ? true : false
@@ -248,7 +254,7 @@ resource "aws_iam_role_policy_attachment" "codebuild_s3" {
 
 resource "aws_codepipeline" "default" {
   # Elastic Beanstalk application name and environment name are specified
-  count    = local.enabled ? 1 : 0
+  count    = local.enabled && var.github_connection_arn != "" ? 1 : 0
   name     = module.this.id
   role_arn = join("", aws_iam_role.default.*.arn)
   tags     = module.this.tags
@@ -275,6 +281,110 @@ resource "aws_codepipeline" "default" {
         Repo                 = var.repo_name
         Branch               = var.branch
         PollForSourceChanges = var.poll_source_changes
+      }
+
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name     = "Build"
+      category = "Build"
+      owner    = "AWS"
+      provider = "CodeBuild"
+      version  = "1"
+
+      input_artifacts  = ["code"]
+      output_artifacts = ["package"]
+
+      configuration = {
+        ProjectName = module.codebuild.project_name
+      }
+    }
+  }
+
+  dynamic "stage" {
+    for_each = var.elastic_beanstalk_application_name != "" && var.elastic_beanstalk_environment_name != "" ? ["true"] : []
+    content {
+      name = "Deploy"
+
+      action {
+        name            = "Deploy"
+        category        = "Deploy"
+        owner           = "AWS"
+        provider        = "ElasticBeanstalk"
+        input_artifacts = ["package"]
+        version         = "1"
+
+        configuration = {
+          ApplicationName = var.elastic_beanstalk_application_name
+          EnvironmentName = var.elastic_beanstalk_environment_name
+        }
+      }
+    }
+  }
+
+  dynamic "stage" {
+    for_each = var.website_bucket_name != "" ? ["true"] : []
+    content {
+      name = "Deploy"
+
+      action {
+        name            = "Deploy"
+        category        = "Deploy"
+        owner           = "AWS"
+        provider        = "S3"
+        input_artifacts = ["package"]
+        version         = "1"
+
+        configuration = {
+          BucketName = var.website_bucket_name
+          Extract    = "true"
+          CannedACL  = var.website_bucket_acl
+        }
+      }
+    }
+  }
+}
+
+resource "aws_codepipeline" "default_codestart" {
+  # Elastic Beanstalk application name and environment name are specified
+  count    = local.enabled && var.github_connection_arn != "" ? 1 : 0
+  name     = module.this.id
+  role_arn = join("", aws_iam_role.default.*.arn)
+  tags     = module.this.tags
+
+  artifact_store {
+    location = join("", aws_s3_bucket.default.*.bucket)
+    type     = "S3"
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "GitHub_Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
+      version          = "1"
+      output_artifacts = ["source_output"]
+
+      # configuration = {
+      #   OAuthToken           = var.github_oauth_token
+      #   Owner                = var.repo_owner
+      #   Repo                 = var.repo_name
+      #   Branch               = var.branch
+      #   PollForSourceChanges = var.poll_source_changes
+      # }
+
+      configuration = {
+        ConnectionArn    = var.github_connection_arn
+        FullRepositoryId = "${var.repo_owner}/${var.repo_name}"
+        BranchName       = var.branch
+        DetectChanges    = var.poll_source_changes
       }
     }
   }
@@ -343,7 +453,7 @@ resource "aws_codepipeline" "default" {
 }
 
 resource "random_password" "webhook_secret" {
-  count  = local.webhook_enabled ? 1 : 0
+  count  = local.webhook_enabled && var.github_connection_arn == "" ? 1 : 0
   length = 32
 
   # Special characters are not allowed in webhook secret (AWS silently ignores webhook callbacks)
@@ -351,7 +461,7 @@ resource "random_password" "webhook_secret" {
 }
 
 resource "aws_codepipeline_webhook" "default" {
-  count           = local.webhook_count
+  count           = local.webhook_count > 0 && var.github_connection_arn == "" ? 1 : 0
   name            = module.this.id
   authentication  = var.webhook_authentication
   target_action   = var.webhook_target_action
@@ -368,6 +478,7 @@ resource "aws_codepipeline_webhook" "default" {
 }
 
 module "github_webhook" {
+  count   = var.github_connection_arn == "" ? 1 : 0
   source  = "cloudposse/repository-webhooks/github"
   version = "0.13.0"
 

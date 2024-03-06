@@ -16,7 +16,7 @@ variable "github_oauth_token" {
 }
 
 variable "github_oauth_token_type" {
-  type        = string
+  type    = string
   default = "PLAINTEXT"
 }
 
@@ -201,4 +201,10 @@ variable "build_image_pull_credentials_type" {
   type        = string
   default     = "CODEBUILD"
   description = "Type of credentials AWS CodeBuild uses to pull images in your build.Valid values: CODEBUILD, SERVICE_ROLE. When you use a cross-account or private registry image, you must use SERVICE_ROLE credentials."
+}
+
+variable "github_connection_arn" {
+  type        = string
+  default     = ""
+  description = "ARN of the GitHub connection. Used in GitHub -> S3 -> Elastic Beanstalk pipeline"
 }
