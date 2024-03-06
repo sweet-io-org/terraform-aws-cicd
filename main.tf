@@ -4,10 +4,9 @@ data "aws_caller_identity" "default" {
 data "aws_region" "default" {
 }
 
-data "aws_codestarconnections_connection" {
+data "aws_codestarconnections_connection" "gitconnection" {
   count = var.github_connection_arn != "" ? 1 : 0
-
-  arn = var.github_connection_arn
+  arn   = var.github_connection_arn
 }
 
 locals {
@@ -381,7 +380,7 @@ resource "aws_codepipeline" "default_codestart" {
       # }
 
       configuration = {
-        ConnectionArn    = var.github_connection_arn
+        ConnectionArn    = data.aws_codestarconnections_connection.gitconnection[0].arn
         FullRepositoryId = "${var.repo_owner}/${var.repo_name}"
         BranchName       = var.branch
         DetectChanges    = var.poll_source_changes
