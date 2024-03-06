@@ -4,17 +4,19 @@ data "aws_caller_identity" "default" {
 data "aws_region" "default" {
 }
 
-data "aws_codestarconnections_connection" "gitconnection" {
-  count = var.github_connection_arn != "" ? 1 : 0
-  arn   = var.github_connection_arn
+locals {
+  enabled               = module.this.enabled
+  webhook_enabled       = local.enabled && var.webhook_enabled ? true : false
+  webhook_count         = local.webhook_enabled ? 1 : 0
+  webhook_secret        = join("", random_password.webhook_secret.*.result)
+  webhook_url           = join("", aws_codepipeline_webhook.default.*.url)
+  gitconnection_enabled = var.github_connection_arn != "" ? true : false
+  gitconnection_count   = var.github_connection_arn != "" ? 1 : 0
 }
 
-locals {
-  enabled         = module.this.enabled
-  webhook_enabled = local.enabled && var.webhook_enabled ? true : false
-  webhook_count   = local.webhook_enabled ? 1 : 0
-  webhook_secret  = join("", random_password.webhook_secret.*.result)
-  webhook_url     = join("", aws_codepipeline_webhook.default.*.url)
+data "aws_codestarconnections_connection" "gitconnection" {
+  count = loval.gitconnection_count
+  arn   = var.github_connection_arn
 }
 
 resource "aws_s3_bucket" "default" {
@@ -253,7 +255,7 @@ resource "aws_iam_role_policy_attachment" "codebuild_s3" {
 
 resource "aws_codepipeline" "default" {
   # Elastic Beanstalk application name and environment name are specified
-  count    = local.enabled && var.github_connection_arn != "" ? 1 : 0
+  count    = local.enabled && !local.gitconnection_enabled ? 1 : 0
   name     = module.this.id
   role_arn = join("", aws_iam_role.default.*.arn)
   tags     = module.this.tags
@@ -350,7 +352,7 @@ resource "aws_codepipeline" "default" {
 
 resource "aws_codepipeline" "default_codestart" {
   # Elastic Beanstalk application name and environment name are specified
-  count    = local.enabled && var.github_connection_arn != "" ? 1 : 0
+  count    = local.enabled && local.gitconnection_enabled ? 1 : 0
   name     = module.this.id
   role_arn = join("", aws_iam_role.default.*.arn)
   tags     = module.this.tags
@@ -452,7 +454,7 @@ resource "aws_codepipeline" "default_codestart" {
 }
 
 resource "random_password" "webhook_secret" {
-  count  = local.webhook_enabled && var.github_connection_arn == "" ? 1 : 0
+  count  = local.webhook_enabled && !local.gitconnection_enabled ? 1 : 0
   length = 32
 
   # Special characters are not allowed in webhook secret (AWS silently ignores webhook callbacks)
@@ -460,7 +462,7 @@ resource "random_password" "webhook_secret" {
 }
 
 resource "aws_codepipeline_webhook" "default" {
-  count           = local.webhook_count > 0 && var.github_connection_arn == "" ? 1 : 0
+  count           = local.webhook_count > 0 && !local.gitconnection_enabled ? 1 : 0
   name            = module.this.id
   authentication  = var.webhook_authentication
   target_action   = var.webhook_target_action
@@ -477,7 +479,7 @@ resource "aws_codepipeline_webhook" "default" {
 }
 
 module "github_webhook" {
-  count   = var.github_connection_arn == "" ? 1 : 0
+  count   = local.gitconnection_enabled ? 0 : 1
   source  = "cloudposse/repository-webhooks/github"
   version = "0.13.0"
 
