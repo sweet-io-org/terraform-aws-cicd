@@ -366,7 +366,7 @@ resource "aws_codepipeline" "default_codestart" {
       owner            = "AWS"
       provider         = "CodeStarSourceConnection"
       version          = "1"
-      output_artifacts = ["source_output"]
+      output_artifacts = ["code"]
 
       # configuration = {
       #   OAuthToken           = var.github_oauth_token
