@@ -204,6 +204,33 @@ data "aws_iam_policy_document" "codebuild" {
   }
 }
 
+resource "aws_iam_role_policy_attachment" "codestar_connection" {
+  count      = local.enabled && local.gitconnection_enabled ? 1 : 0
+  role       = join("", aws_iam_role.default.*.id)
+  policy_arn = join("", aws_iam_policy.codestar_connection.*.arn)
+}
+
+resource "aws_iam_policy" "codestar_connection" {
+  count  = local.enabled && local.gitconnection_enabled ? 1 : 0
+  name   = "${module.this.id}-codestar_connection"
+  policy = join("", data.aws_iam_policy_document.codestar_connection.*.json)
+}
+
+data "aws_iam_policy_document" "codestar_connection" {
+  count = local.enabled && local.gitconnection_enabled ? 1 : 0
+
+  statement {
+    sid = "codestatConnectionPipeline"
+
+    actions = [
+      "codestar-connection:UseConnection"
+    ]
+
+    resources = [var.github_connection_arn]
+    effect    = "Allow"
+  }
+}
+
 module "codebuild" {
   source                            = "cloudposse/codebuild/aws"
   version                           = "2.0.1"
