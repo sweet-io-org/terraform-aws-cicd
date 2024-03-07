@@ -14,11 +14,6 @@ locals {
   gitconnection_count   = var.github_connection_arn != "" ? 1 : 0
 }
 
-data "aws_codestarconnections_connection" "gitconnection" {
-  count = local.gitconnection_count
-  arn   = var.github_connection_arn
-}
-
 resource "aws_s3_bucket" "default" {
   #bridgecrew:skip=BC_AWS_S3_13:Skipping `Enable S3 Bucket Logging` check until bridgecrew will support dynamic blocks (https://github.com/bridgecrewio/checkov/issues/776).
   #bridgecrew:skip=BC_AWS_S3_14:Skipping `Ensure all data stored in the S3 bucket is securely encrypted at rest` check until bridgecrew will support dynamic blocks (https://github.com/bridgecrewio/checkov/issues/776).
@@ -382,7 +377,7 @@ resource "aws_codepipeline" "default_codestart" {
       # }
 
       configuration = {
-        ConnectionArn    = data.aws_codestarconnections_connection.gitconnection[0].arn
+        ConnectionArn    = var.github_connection_arn
         FullRepositoryId = "${var.repo_owner}/${var.repo_name}"
         BranchName       = var.branch
         DetectChanges    = var.poll_source_changes
