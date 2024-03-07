@@ -223,7 +223,7 @@ data "aws_iam_policy_document" "codestar_connection" {
     sid = "codestatConnectionPipeline"
 
     actions = [
-      "codestar-connection:UseConnection"
+      "codestar-connections:UseConnection"
     ]
 
     resources = [var.github_connection_arn]
