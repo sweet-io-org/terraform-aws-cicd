@@ -89,6 +89,12 @@ variable "build_compute_type" {
   description = "`CodeBuild` instance size.  Possible values are: ```BUILD_GENERAL1_SMALL``` ```BUILD_GENERAL1_MEDIUM``` ```BUILD_GENERAL1_LARGE```"
 }
 
+variable "build_type" {
+  type = string
+  default = "LINUX_CONTAINER"
+  description = "`CodeBuild` build type.  Possible values are: ```LINUX_CONTAINER``` ```LINUX_GPU``` ```ARM_CONTAINER```"
+}
+
 variable "buildspec" {
   type        = string
   default     = ""
