@@ -220,6 +220,7 @@ module "codebuild" {
   cache_bucket_suffix_enabled = var.codebuild_cache_bucket_suffix_enabled
   cache_type                  = var.cache_type
   build_image_pull_credentials_type = var.build_image_pull_credentials_type
+  build_type                        = var.build_type
 
   context = module.this.context
 }
