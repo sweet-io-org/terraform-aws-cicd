@@ -161,6 +161,12 @@ variable "codebuild_cache_bucket_suffix_enabled" {
   default     = true
 }
 
+variable "codebuild_extra_policy_arns" {
+  type        = list(string)
+  default     = []
+  description = "List of ARNs of extra policies to attach to the CodeBuild role"
+}
+
 variable "force_destroy" {
   type        = bool
   default     = false

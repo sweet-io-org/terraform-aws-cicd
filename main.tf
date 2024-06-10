@@ -260,6 +260,12 @@ resource "aws_iam_role_policy_attachment" "codebuild_s3" {
   policy_arn = join("", aws_iam_policy.s3.*.arn)
 }
 
+resource "aws_iam_role_policy_attachment" "codebuild_extras" {
+  for_each   = local.enabled ? toset(var.codebuild_extra_policy_arns) : []
+  role       = module.codebuild.role_id
+  policy_arn = each.value
+}
+
 # Only one of the `aws_codepipeline` resources below will be created:
 
 # "source_build_deploy" will be created if `local.enabled` is set to `true` and the Elastic Beanstalk application name and environment name are specified
