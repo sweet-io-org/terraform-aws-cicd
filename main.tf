@@ -261,7 +261,7 @@ resource "aws_iam_role_policy_attachment" "codebuild_s3" {
 }
 
 resource "aws_iam_role_policy_attachment" "codebuild_extras" {
-  for_each   = local.enabled ? toset(var.codebuild_extra_policy_arns) : []
+  for_each   = module.this.enabled ? toset(var.codebuild_extra_policy_arns) : []
   role       = module.codebuild.role_id
   policy_arn = each.value
 }
