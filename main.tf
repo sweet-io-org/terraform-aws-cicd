@@ -5,6 +5,11 @@ data "aws_region" "default" {
 }
 
 locals {
+  codebuild_extra_policy_arns_map = {
+    for index, arn in tolist(var.codebuild_extra_policy_arns) : index => arn
+  }
+}
+locals {
   enabled               = module.this.enabled
   webhook_enabled       = local.enabled && var.webhook_enabled ? true : false
   webhook_count         = local.webhook_enabled ? 1 : 0
@@ -261,7 +266,7 @@ resource "aws_iam_role_policy_attachment" "codebuild_s3" {
 }
 
 resource "aws_iam_role_policy_attachment" "codebuild_extras" {
-  for_each   = module.this.enabled ? toset(var.codebuild_extra_policy_arns) : []
+  for_each   = module.this.enabled ? local.codebuild_extra_policy_arns_map : {}
   role       = module.codebuild.role_id
   policy_arn = each.value
 }
